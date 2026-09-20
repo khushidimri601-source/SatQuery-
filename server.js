@@ -8,8 +8,14 @@ const multer = require('multer');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
+const {
+  db,
+  dbQuery,
+  dbGet,
+  dbRun,
+  dbReady
+} = require('./db');
 
-const { dbQuery, dbGet, dbRun } = require('./db');
 const intelligencePy = path.join(__dirname, 'intelligence.py');
 
 const app = express();
