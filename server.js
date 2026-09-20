@@ -139,7 +139,7 @@ app.get('/api/health', (req, res) => {
 // ----------------------------------------------------
 // 2. Authentication Endpoints
 // ----------------------------------------------------
-app.post('/api/auth/register', async (req, res) => {
+app.post('auth/register', async (req, res) => {
   try {
     const username = String(req.body?.username || '').trim();
     const password = String(req.body?.password || '');
@@ -153,7 +153,7 @@ app.post('/api/auth/register', async (req, res) => {
   } catch (err) { console.error('Registration error:', err); res.status(500).json({ error: 'Unable to create account.' }); }
 });
 
-app.post('/api/auth/login', async (req, res) => {
+app.post('auth/login', async (req, res) => {
   try {
     const username = String(req.body?.username || '').trim();
     const password = String(req.body?.password || '');
