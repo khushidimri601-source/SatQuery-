@@ -1,0 +1,4 @@
+# Optional real Prithvi-EO-2.0 backbone inference.
+# TerraTorch provides the official Prithvi model registry used by SatQuery.
+torch>=2.1
+terratorch>=1.2.0

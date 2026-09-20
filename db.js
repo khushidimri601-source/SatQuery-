@@ -2,8 +2,8 @@ const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 const bcrypt = require('bcryptjs');
 
-// Using In-Memory SQLite database to operate seamlessly without disk storage dependency
-const DB_PATH = process.env.DB_PATH || ':memory:';
+// Persistent SQLite database for history across restarts
+const DB_PATH = process.env.DB_PATH || path.join(__dirname, 'satquery.db');
 
 const db = new sqlite3.Database(DB_PATH, (err) => {
   if (err) {
@@ -69,33 +69,10 @@ db.serialize(() => {
     )
   `);
 
-  // Seed default demo user 'analyst' / 'satquery' if not exists
-  db.get(`SELECT * FROM users WHERE username = ?`, ['analyst'], (err, row) => {
-    if (!err && !row) {
-      const hash = bcrypt.hashSync('satquery', 10);
-      db.run(
-        `INSERT INTO users (username, password_hash, role) VALUES (?, ?, ?)`,
-        ['analyst', hash, 'Lead EO Analyst'],
-        (err) => {
-          if (!err) console.log('👤 Default user created: username="analyst", password="satquery"');
-        }
-      );
-    }
-  });
+  // No hardcoded demo/guest accounts. Create an account through /api/auth/register.
 
-  // Seed guest user if not exists
-  db.get(`SELECT * FROM users WHERE username = ?`, ['Guest'], (err, row) => {
-    if (!err && !row) {
-      const hash = bcrypt.hashSync('guestpass', 10);
-      db.run(
-        `INSERT INTO users (username, password_hash, role) VALUES (?, ?, ?)`,
-        ['Guest', hash, 'Guest Analyst'],
-        (err) => {
-          if (!err) console.log('👤 Guest user registered in SQLite DB.');
-        }
-      );
-    }
-  });
+
+
 });
 
 // Database helper functions (Promise-based)
@@ -126,9 +103,4 @@ const dbRun = (sql, params = []) => {
   });
 };
 
-module.exports = {
-  db,
-  dbQuery,
-  dbGet,
-  dbRun
-};
+module.exports = { db, dbQuery, dbGet, dbRun };

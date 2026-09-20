@@ -403,6 +403,7 @@
     cursor:pointer;
     transition:background .15s ease, color .15s ease;
   }
+  .mode-btn:disabled{opacity:.38;cursor:not-allowed;filter:grayscale(1)}
   .mode-btn.active{ background:var(--border); color:var(--text); }
   .mode-btn:hover:not(.active){ color:var(--text); }
   .tile-readout{
@@ -453,6 +454,16 @@
   .ai-stats b{ color:var(--text-dim); font-weight:500; }
   .empty-hint{ color:var(--text-faint); font-size:12.5px; line-height:1.6; padding-top:6px; }
 
+  .query-help{padding:8px 16px 0;color:var(--text-faint);font-size:10.5px;line-height:1.45;}
+  .analysis-card{margin:10px 16px;padding:10px;border:1px solid var(--border);border-radius:9px;background:var(--panel-alt);display:none;}
+  .analysis-card.show{display:block;}
+  .analysis-card .card-title{font-family:var(--font-mono);font-size:10px;color:var(--teal);text-transform:uppercase;letter-spacing:.08em;margin-bottom:7px;}
+  .analysis-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px 12px;font-family:var(--font-mono);font-size:10.5px;color:var(--text-faint);}
+  .analysis-grid b{color:var(--text-dim);font-weight:500;}
+  .disclaimer{margin-top:7px;color:var(--text-faint);font-size:10px;line-height:1.4;}
+  .compare-region-list{margin-top:8px;display:grid;gap:4px;max-height:120px;overflow:auto;}
+  .compare-region{display:flex;justify-content:space-between;gap:8px;font-family:var(--font-mono);font-size:10px;color:var(--text-faint);padding:4px 0;border-bottom:1px solid var(--border-soft);}
+  .compare-region b{color:var(--text-dim);}
   #queryform{ display:flex; gap:8px; padding:12px 16px; border-top:1px solid var(--border-soft); }
   .upload-row{ padding:12px 16px 0; }
   .upload-button{
@@ -462,7 +473,20 @@
   }
   .upload-button:hover{ border-color:var(--teal); color:var(--text); }
   .upload-button strong{ color:var(--teal); font-weight:600; }
-  #sceneFile{ display:none; }
+  #sceneFile, #beforeFile, #afterFile{ display:none; }
+  .compare-box{ margin:10px 16px 0; padding:10px; border:1px solid var(--border); border-radius:9px; background:var(--panel-alt); }
+  .compare-title{ font-family:var(--font-mono); font-size:10px; color:var(--teal); letter-spacing:.08em; text-transform:uppercase; margin-bottom:8px; }
+  .compare-files{ display:grid; grid-template-columns:1fr 1fr; gap:7px; }
+  .compare-file{ min-width:0; border:1px dashed var(--border); border-radius:7px; padding:7px; cursor:pointer; color:var(--text-faint); font-size:10.5px; }
+  .compare-file:hover{ border-color:var(--teal); color:var(--text); }
+  .compare-file b{ display:block; color:var(--text-dim); margin-bottom:3px; }
+  .compare-run{ width:100%; margin-top:7px; border:0; border-radius:7px; padding:8px; background:var(--teal); color:#08211D; font-weight:700; cursor:pointer; }
+  .compare-run:disabled{ opacity:.5; cursor:default; }
+  .compare-result{ display:none; margin:10px 16px; padding:10px; border:1px solid var(--border); border-radius:9px; background:var(--panel-alt); }
+  .compare-result.show{ display:block; }
+  .compare-stats{ display:grid; grid-template-columns:auto 1fr; gap:3px 8px; font-family:var(--font-mono); font-size:10.5px; color:var(--text-faint); margin-bottom:8px; }
+  .compare-stats b{ color:var(--text-dim); }
+  .compare-result img{ width:100%; max-height:220px; object-fit:contain; border-radius:6px; border:1px solid var(--border); background:#090D14; }
   #fileName{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   .file-preview{ display:none; align-items:center; gap:8px; margin-top:7px; color:var(--text-faint); font-size:11px; }
   .file-preview.show{ display:flex; }
@@ -531,9 +555,17 @@
 
   #geojson-drawer{
     flex-shrink:0; border-top:1px solid var(--border); background:var(--panel);
-    display:flex; flex-direction:column; max-height:34vh; transition:max-height .2s ease;
+    display:flex; flex-direction:column; height:240px; max-height:85vh; min-height:38px;
+    position:relative; transition:height .15s ease;
   }
-  #geojson-drawer.collapsed{ max-height:38px; }
+  #geojson-drawer.collapsed{ height:38px !important; }
+  #geojson-drawer.expanded{ height:75vh !important; }
+  .drawer-resizer{
+    position:absolute; top:-4px; left:0; right:0; height:8px; cursor:ns-resize; z-index:20;
+  }
+  .drawer-resizer:hover, .drawer-resizer.dragging{
+    background:rgba(45,212,191,0.45);
+  }
   .drawer-head{ display:flex; align-items:center; justify-content:space-between; padding:8px 16px; cursor:pointer; flex-shrink:0; user-select:none; }
   .drawer-head-left{ display:flex; align-items:center; gap:8px; }
   .drawer-title{ font-family:var(--font-mono); font-size:11.5px; color:var(--text-dim); }
@@ -543,15 +575,15 @@
   }
   .caret{ color:var(--text-faint); font-size:11px; transition:transform .2s ease; }
   #geojson-drawer.collapsed .caret{ transform:rotate(-90deg); }
-  .drawer-actions{ display:flex; gap:6px; }
+  .drawer-actions{ display:flex; gap:6px; flex-wrap:wrap; }
   .drawer-actions button{
     background:var(--panel-alt); border:1px solid var(--border); color:var(--text-dim);
     font-family:var(--font-mono); font-size:10.5px; padding:4px 10px; border-radius:6px; cursor:pointer;
   }
   .drawer-actions button:hover{ color:var(--text); border-color:var(--teal); }
   #geojson-output{
-    margin:0; padding:0 16px 14px 16px; overflow:auto; font-family:var(--font-mono);
-    font-size:11.5px; line-height:1.55; color:#9FD8CE; white-space:pre;
+    flex:1; margin:0; padding:0 16px 14px 16px; overflow:auto; font-family:var(--font-mono);
+    font-size:11.5px; line-height:1.55; color:#9FD8CE; white-space:pre-wrap; word-break:break-word;
   }
   .gj-key{ color:var(--sky); }
   .gj-str{ color:#9FD8CE; }
@@ -587,6 +619,78 @@
     .stat-grid{ grid-template-columns:repeat(2,1fr); }
     .quickcards{ grid-template-columns:1fr; }
   }
+
+  .intel-tools{margin:10px 16px 0;padding:10px;border:1px solid var(--border);border-radius:9px;background:var(--panel-alt)}
+  .intel-tools-title{font-family:var(--font-mono);font-size:10px;color:var(--teal);text-transform:uppercase;letter-spacing:.08em;margin-bottom:7px}
+  .intel-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:6px}
+  .intel-btn{border:1px solid var(--border);background:transparent;color:var(--text-dim);padding:7px;border-radius:7px;font-size:10px;cursor:pointer;text-align:left}
+  .intel-btn:hover{border-color:var(--teal);color:var(--text)}
+  .tool-result{margin:10px 16px;padding:9px;border:1px solid var(--border);border-radius:9px;background:var(--panel-alt);display:none;font-size:10.5px;line-height:1.5;color:var(--text-faint)}
+  .tool-result.show{display:block}.tool-result b{color:var(--text-dim)}
+  .report-btn{width:100%;margin-top:7px;border:1px solid var(--border);background:transparent;color:var(--text-dim);padding:7px;border-radius:7px;cursor:pointer}
+
+  /* Clear task-based analysis workspace */
+  .analysis-tabs{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;padding:9px 12px;border-bottom:1px solid var(--border);background:var(--panel-alt)}
+  .analysis-tab{border:1px solid transparent;background:transparent;color:var(--text-faint);font-family:var(--font-mono);font-size:10px;padding:8px 4px;border-radius:7px;cursor:pointer}
+  .analysis-tab:hover{color:var(--text);border-color:var(--border)}
+  .analysis-tab.active{background:var(--border);color:var(--text);border-color:var(--teal);font-weight:800;box-shadow:0 0 0 1px rgba(45,212,191,.18), inset 0 -2px 0 var(--teal)}
+  .console-panel.active{outline:1px solid rgba(45,212,191,.10);outline-offset:-1px}
+  .console-panel.active .panel-title{font-size:16px;font-weight:800;letter-spacing:.01em}
+  .console-panel.active .panel-subtitle{font-size:11.5px;color:var(--text-dim)}
+  .console-panel.active .image-result,.console-panel.active .compare-result,.console-panel.active .tool-result{box-shadow:0 12px 35px rgba(0,0,0,.18)}
+  .result-error{margin:12px 16px;padding:14px;border:1px solid rgba(248,113,113,.35);border-radius:10px;background:rgba(127,29,29,.16);color:#fecaca;font-size:11px;line-height:1.5}
+  .console-panel{display:none;flex:1;min-height:0;overflow-y:auto;padding-bottom:12px}
+  .console-panel.active{display:flex;flex-direction:column}
+  .panel-intro{padding:13px 16px 8px;border-bottom:1px solid var(--border-soft)}
+  .console-kicker,.section-label{font-family:var(--font-mono);font-size:9.5px;letter-spacing:.08em;color:var(--teal);text-transform:uppercase}
+  .panel-title{font-family:var(--font-display);font-size:14px;font-weight:600;color:var(--text);margin-top:2px}
+  .panel-subtitle{font-size:11px;color:var(--text-faint);line-height:1.4;margin-top:3px}
+  #ask-panel #chatlog{min-height:150px}
+  #ask-panel .chips{border-bottom:0;padding-top:10px}
+  #image-panel .upload-row{padding-top:12px}
+  .feature-section{margin:12px 16px 0;padding:10px;border:1px solid var(--border);border-radius:9px;background:var(--panel-alt)}
+  .section-label{margin-bottom:8px}
+  .compare-box-large{margin:14px 16px 0;padding:12px}
+  .file-step{float:right;font-family:var(--font-mono);font-size:9px;color:var(--text-faint);border:1px solid var(--border);padding:2px 5px;border-radius:4px}
+  .method-note{margin:10px 16px;padding:10px;border:1px solid var(--border-soft);border-radius:8px;color:var(--text-faint);font-size:10.5px;line-height:1.5;background:rgba(255,255,255,.015)}
+  .timeline-upload{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-height:105px;border:1px dashed var(--border);border-radius:8px;cursor:pointer;text-align:center;color:var(--text-dim);font-size:11px}
+  .timeline-upload span:last-of-type{font-family:var(--font-mono);font-size:10px;color:var(--text-faint)}
+  .timeline-upload input{display:none}
+  .timeline-icon{font-size:22px;color:var(--teal)}
+  .report-card{margin:14px 16px 0;padding:12px;border:1px solid var(--border);border-radius:9px;background:var(--panel-alt);display:flex;align-items:center;gap:10px}
+  .report-card>div{flex:1}.report-card b{display:block;font-size:12px;color:var(--text)}.report-card span{display:block;font-size:10px;color:var(--text-faint);margin-top:3px}
+  .report-card .report-btn{width:auto;margin:0;padding:8px 12px;white-space:nowrap}
+  .export-hint{margin:10px 16px;padding:10px;border-radius:8px;background:var(--panel-alt);border:1px solid var(--border-soft);font-size:10.5px;color:var(--text-faint)}
+  .export-hint b{display:block;color:var(--text-dim);margin-bottom:3px}
+
+/* --- Image viewer / clearer analysis results --- */
+.image-expandable{cursor:zoom-in; transition:transform .15s ease, box-shadow .15s ease;}
+.image-expandable:hover{transform:scale(1.01); box-shadow:0 8px 28px rgba(0,0,0,.28);}
+.image-viewer{position:fixed;inset:0;background:rgba(4,9,18,.94);display:none;align-items:center;justify-content:center;z-index:99999;padding:28px;}
+.image-viewer.show{display:flex;}
+.image-viewer img{max-width:96vw;max-height:92vh;object-fit:contain;border-radius:10px;box-shadow:0 18px 70px rgba(0,0,0,.55);}
+.image-viewer-close{position:absolute;right:22px;top:18px;width:44px;height:44px;border:1px solid rgba(255,255,255,.25);border-radius:50%;background:rgba(20,30,45,.85);color:#fff;font-size:26px;cursor:pointer;}
+.image-viewer-caption{position:absolute;left:24px;bottom:18px;color:#dbe7f5;font-size:13px;background:rgba(10,18,30,.78);padding:8px 12px;border-radius:8px;}
+.image-result{margin-top:16px;border:1px solid rgba(90,210,190,.22);border-radius:12px;padding:14px;background:rgba(18,30,44,.7);display:none;}
+.image-result.show{display:block;}
+.image-result-title{font-weight:700;font-size:14px;margin-bottom:8px;color:#5eead4;}
+.image-result-answer{line-height:1.55;color:#e8eef7;margin-bottom:12px;}
+.image-result-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;font-size:12px;}
+.image-result-grid span{color:#8fa2b8}.image-result-grid b{color:#fff;text-align:right;}
+@media(max-width:800px){.image-result-grid{grid-template-columns:1fr;}.image-viewer{padding:12px;}}
+
+/* --- evidence-first output --- */
+.semantic-change-card{margin-top:12px;padding:11px;border:1px solid var(--border);border-radius:9px;background:var(--panel-alt)}
+.semantic-change-title{font-weight:800;color:var(--teal);font-size:11px;margin-bottom:7px}
+.semantic-row{display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:8px;padding:7px 0;border-top:1px solid var(--border-soft);font-size:10.5px}
+.semantic-row:first-of-type{border-top:0}.semantic-row b{color:var(--text)}.semantic-row em,.timeline-semantic em{font-style:normal;color:var(--text-faint)}
+.semantic-row em.increased,.timeline-semantic em.increased{color:#4ade80}.semantic-row em.decreased,.timeline-semantic em.decreased{color:#fb7185}
+.timeline-change{margin-top:10px;padding:10px;border:1px solid var(--border-soft);border-radius:8px;background:rgba(255,255,255,.018)}
+.timeline-main-stat{margin:5px 0 7px;color:var(--text-dim);font-size:10.5px}
+.timeline-semantic{display:grid;grid-template-columns:1.2fr 1fr 1.2fr;gap:6px;padding:5px 0;border-top:1px solid var(--border-soft);font-size:10px}
+.timeline-preview{width:100%;max-height:180px;object-fit:cover;border-radius:7px;margin-top:8px}
+.professional-report{white-space:pre-wrap;max-height:440px;overflow:auto;margin:8px 0 10px;padding:12px;border:1px solid var(--border);border-radius:8px;background:#080d13;color:var(--text);font:10px/1.55 var(--font-mono)}
+
 </style>
 </head>
 <body>
@@ -618,9 +722,9 @@
     </form>
 
     <div class="login-divider">or</div>
-    <button class="btn-guest" id="guestBtn" type="button">Continue as guest</button>
+    <button class="btn-guest" id="guestBtn" type="button">Create analyst account</button>
 
-    <div class="login-hint"><b>Demo build —</b> no real account needed. Enter anything, or use <b>analyst / satquery</b>, to explore the console.</div>
+    <div class="login-hint"><b>Secure demo build —</b> create an analyst account, then sign in. Analysis APIs require an authenticated session.</div>
   </div>
 </div>
 
@@ -723,55 +827,139 @@
         <div class="mode-toggle" id="modeToggle">
           <button class="mode-btn active" data-mode="optical">OPTICAL</button>
           <button class="mode-btn" data-mode="multispectral">MULTISPECTRAL</button>
-          <button class="mode-btn" data-mode="sar">SAR</button>
+          <button class="mode-btn" data-mode="sar" title="Synthetic Aperture Radar (Sentinel-1) Backscatter Analysis">SAR · RADAR</button>
         </div>
         <div class="tile-readout">
-          scene: <b>Majuli, Assam · IN</b><br/>
-          tile <b id="tileId">T-0427</b> · model <b>GeoChat-VL</b>
+          scene: <b id="sceneLocation">Majuli, Assam · IN</b><br/>
+          tile <b id="tileId">TILE_S2A_2026_089</b> · engine <b id="modelLabel">Deterministic RGB screening</b>
         </div>
       </header>
 
       <main id="layout">
         <aside id="console">
           <div class="console-head">
-            <h2>Query console</h2>
-            <p>Ask about this scene in plain language. Detections are drawn on the map with an exportable GeoJSON layer below.</p>
+            <div class="console-kicker">SATELLITE INTELLIGENCE</div>
+            <h2>Analysis workspace</h2>
+            <p>Choose one task at a time. Ask AI questions, analyse one image, compare scenes, or study a timeline.</p>
           </div>
 
-          <div class="chips" id="chips">
-            <div class="chip" data-q="Find all flooded regions in this scene">Find flooded regions</div>
-            <div class="chip" data-q="Map the deforestation extent">Map deforestation</div>
-            <div class="chip" data-q="Locate active wildfire hotspots">Locate wildfires</div>
-            <div class="chip" data-q="Highlight water bodies">Highlight water bodies</div>
-            <div class="chip" data-q="Detect built-up urban areas">Detect urban areas</div>
+          <div class="analysis-tabs" role="tablist" aria-label="Analysis tools">
+            <button class="analysis-tab active" data-panel="ask-panel" role="tab" aria-selected="true">Ask AI</button>
+            <button class="analysis-tab" data-panel="image-panel" role="tab" aria-selected="false">Image</button>
+            <button class="analysis-tab" data-panel="compare-panel" role="tab" aria-selected="false">Compare</button>
+            <button class="analysis-tab" data-panel="timeline-panel" role="tab" aria-selected="false">Timeline</button>
+            <button class="analysis-tab" data-panel="reports-panel" role="tab" aria-selected="false">Reports</button>
           </div>
 
-          <div id="chatlog">
-            <div class="empty-hint">No queries yet. Try a suggestion above, or type something like <i>"show me flooded areas near the river"</i>.</div>
-          </div>
-
-          <div class="upload-row">
-            <label class="upload-button" for="sceneFile">
-              <span aria-hidden="true">＋</span>
-              <span><strong>Attach scene</strong> image or file</span>
-              <input id="sceneFile" type="file" accept="image/*,.tif,.tiff,.geojson,.json,.zip" />
-            </label>
-            <div class="file-preview" id="filePreview">
-              <img id="fileThumbnail" alt="" />
-              <span id="fileName"></span>
-              <button class="remove-file" id="removeFile" type="button">Remove</button>
+          <div class="console-panel active" id="ask-panel">
+            <div class="panel-intro">
+              <div class="panel-title">Ask Anything</div>
+              <div class="panel-subtitle">Ask in normal language about the current scene.</div>
+            </div>
+            <div class="chips" id="chips">
+              <div class="chip" data-q="Give me a complete scene summary">Scene summary</div>
+              <div class="chip" data-q="How much water is visible?">Water</div>
+              <div class="chip" data-q="Assess vegetation and crop areas">Agriculture</div>
+              <div class="chip" data-q="Find buildings and built-up areas">Urban areas</div>
+              <div class="chip" data-q="Find possible burn or wildfire areas">Fire / burn</div>
+              <div class="chip" data-q="Where might forest loss or wildlife deforestation have occurred?">Deforestation & Wildlife</div>
+              <div class="chip" data-q="Find roads and infrastructure">Infrastructure</div>
+              <div class="chip" data-q="Is this image suitable for analysis?">Image quality</div>
+            </div>
+            <div id="chatlog">
+              <div class="empty-hint">No questions yet. Try <i>“What should I be concerned about in this scene?”</i></div>
+            </div>
+            <form id="queryform">
+              <input id="queryinput" type="text" placeholder="Ask anything about this satellite scene…" autocomplete="off" />
+              <button type="submit">Ask</button>
+            </form>
+            <div class="query-help">Examples: “Where is the water?”, “Is there urban expansion?”, “What changed?”</div>
+            <div class="threshold-row">
+              <label>MIN CONFIDENCE</label>
+              <input type="range" id="threshold" min="0" max="95" value="55" />
+              <div class="val" id="thresholdVal">55%</div>
             </div>
           </div>
 
-          <form id="queryform">
-            <input id="queryinput" type="text" placeholder="e.g. detect flooded regions" autocomplete="off" />
-            <button type="submit">Run</button>
-          </form>
+          <div class="console-panel" id="image-panel">
+            <div class="panel-intro">
+              <div class="panel-title">Single Image Analysis</div>
+              <div class="panel-subtitle">Upload one scene, then choose the analysis you need.</div>
+            </div>
+            <div class="upload-row">
+              <label class="upload-button" for="sceneFile">
+                <span aria-hidden="true">＋</span>
+                <span><strong>Upload scene</strong> — image or satellite file</span>
+                <input id="sceneFile" type="file" accept="image/*,.jpg,.jpeg,.jfif,.png,.webp,.tif,.tiff" />
+              </label>
+              <div class="file-preview" id="filePreview">
+                <img id="fileThumbnail" alt="" />
+                <span id="fileName"></span>
+                <button class="remove-file" id="removeFile" type="button">Remove</button>
+              </div>
+            </div>
+            <div class="feature-section">
+              <div class="section-label">Choose analysis</div>
+              <div class="intel-grid">
+                <button class="intel-btn" data-tool-query="Give me a complete scene summary">🌐 Scene summary</button>
+                <button class="intel-btn" data-tool-query="How much water is visible?">💧 Water & flood</button>
+                <button class="intel-btn" data-tool-query="Assess vegetation and crop areas">🌱 Agriculture</button>
+                <button class="intel-btn" data-tool-query="Find buildings and built-up areas">🏙️ Urban growth</button>
+                <button class="intel-btn" data-tool-query="Find roads and infrastructure">🛣️ Infrastructure</button>
+                <button class="intel-btn" data-tool-query="Find possible burn or wildfire areas">🔥 Disaster screening</button>
+                <button class="intel-btn" data-tool-query="Where might forest loss have occurred?">🌳 Deforestation</button>
+                <button class="intel-btn" data-tool-query="Is this image suitable for analysis?">🔎 Image quality</button>
+              </div>
+            </div>
+            <div id="analysisCard" class="analysis-card"></div>
+            <div id="imageResult" class="image-result"></div>
+          </div>
 
-          <div class="threshold-row">
-            <label>MIN CONFIDENCE</label>
-            <input type="range" id="threshold" min="0" max="95" value="55" />
-            <div class="val" id="thresholdVal">55%</div>
+          <div class="console-panel" id="compare-panel">
+            <div class="panel-intro">
+              <div class="panel-title">Before / After Comparison</div>
+              <div class="panel-subtitle">Use two images of the same area to detect visual change.</div>
+            </div>
+            <div class="compare-box compare-box-large">
+              <div class="compare-files">
+                <label class="compare-file" for="beforeFile"><span class="file-step">01</span><b>BEFORE</b><span id="beforeName">Choose image</span><input id="beforeFile" type="file" accept="image/*,.jpg,.jpeg,.jfif,.png,.webp,.tif,.tiff" /></label>
+                <label class="compare-file" for="afterFile"><span class="file-step">02</span><b>AFTER</b><span id="afterName">Choose image</span><input id="afterFile" type="file" accept="image/*,.jpg,.jpeg,.jfif,.png,.webp,.tif,.tiff" /></label>
+              </div>
+              <button class="compare-run" id="compareBtn" type="button">Compare scenes</button>
+            </div>
+            <div class="method-note"><b>How it works:</b> image normalization → pixel difference → noise filtering → changed regions → heatmap & statistics.</div>
+          </div>
+
+          <div class="console-panel" id="timeline-panel">
+            <div class="panel-intro">
+              <div class="panel-title">Multi-Date Timeline</div>
+              <div class="panel-subtitle">Upload 1–8 dated scenes to track environmental & land change.</div>
+            </div>
+            <div class="compare-box compare-box-large">
+              <label class="timeline-upload" for="timelineFiles">
+                <span class="timeline-icon">＋</span>
+                <b>Select satellite scenes</b>
+                <span id="timelineName">Click to browse or add images</span>
+                <input id="timelineFiles" type="file" accept="image/*,.jpg,.jpeg,.jfif,.png,.webp,.tif,.tiff" multiple />
+              </label>
+              <div id="timelineSceneList" style="margin-top:10px;display:grid;gap:6px;"></div>
+              <button class="compare-run" id="timelineBtn" type="button" style="margin-top:10px;">Analyse timeline</button>
+            </div>
+            <div id="timelineResult" class="tool-result"></div>
+            <div class="method-note">The timeline compares consecutive scenes and reports change percentage, region count, and overall trend over time.</div>
+          </div>
+
+          <div class="console-panel" id="reports-panel">
+            <div class="panel-intro">
+              <div class="panel-title">Insights & Reports</div>
+              <div class="panel-subtitle">Turn your latest analysis into a clear, shareable result.</div>
+            </div>
+            <div class="report-card">
+              <div><b>Intelligence report</b><span>Summary, evidence, metrics and findings</span></div>
+              <button class="report-btn" id="reportBtn">Generate report</button>
+            </div>
+            <div id="toolResult" class="tool-result"></div>
+            <div class="export-hint"><b>Map exports</b><span>GeoJSON, JSON and CSV are available from the results drawer.</span></div>
           </div>
         </aside>
 
@@ -785,15 +973,16 @@
           <div id="processing-overlay">
             <div class="sweep-box">
               <div class="sweep-title">Running inference…</div>
-              <div class="step" id="step1"><div class="dot"></div>Tile processing (GDAL / Rasterio)</div>
-              <div class="step" id="step2"><div class="dot"></div>VLM embedding (PyTorch)</div>
-              <div class="step" id="step3"><div class="dot"></div>Spatial grounding → GeoJSON</div>
+              <div class="step" id="step1"><div class="dot"></div>Image normalization & quality check</div>
+              <div class="step" id="step2"><div class="dot"></div>Natural-language intent + visual screening</div>
+              <div class="step" id="step3"><div class="dot"></div>Candidate regions → GeoJSON</div>
             </div>
           </div>
         </section>
       </main>
 
       <footer id="geojson-drawer" class="collapsed">
+        <div class="drawer-resizer" id="drawerResizer" title="Drag to resize height"></div>
         <div class="drawer-head" id="drawerHead">
           <div class="drawer-head-left">
             <span class="caret">▾</span>
@@ -801,6 +990,8 @@
             <span class="drawer-count" id="featureCount">0 features</span>
           </div>
           <div class="drawer-actions">
+            <button id="toggleWrapBtn" type="button" title="Toggle line wrapping">Unwrap</button>
+            <button id="expandDrawerBtn" type="button" title="Expand / shrink height">⤢ Expand</button>
             <button id="copyBtn" type="button">Copy</button>
             <button id="downloadGeoBtn" type="button">Download .geojson</button>
             <button id="downloadJsonBtn" type="button">Download .json</button>
@@ -824,11 +1015,16 @@
 </div>
 
 <div class="toast" id="toast"></div>
+<div class="image-viewer" id="imageViewer" aria-hidden="true">
+  <button class="image-viewer-close" id="imageViewerClose" type="button" aria-label="Close">×</button>
+  <img id="imageViewerImg" alt="Expanded satellite image" />
+  <div class="image-viewer-caption" id="imageViewerCaption">Click outside or × to close</div>
+</div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script>
 (function(){
-  const API_BASE = 'http://localhost:3000/api';
+  const API_BASE = `${window.location.origin}/api`;
 
   // =========================================================
   // SESSION / LOGIN
@@ -879,8 +1075,8 @@
         document.getElementById('loginError').style.display = 'block';
       }
     } catch (err) {
-      console.warn('Backend unavailable, operating in local session mode:', err);
-      loginUserSession(username.charAt(0).toUpperCase() + username.slice(1), 'mock-token', 'Analyst');
+      document.getElementById('loginError').textContent = 'Cannot reach the SatQuery backend. Start the server and try again.';
+      document.getElementById('loginError').style.display = 'block';
     }
   }
 
@@ -897,8 +1093,18 @@
     performLogin(u, p);
   });
 
-  document.getElementById('guestBtn').addEventListener('click', function(){
-    performLogin('Guest', 'guestpass');
+  document.getElementById('guestBtn').addEventListener('click', async function(){
+    const u = document.getElementById('loginUser').value.trim();
+    const p = document.getElementById('loginPass').value;
+    if (!u || !p) { document.getElementById('loginError').textContent='Enter a username and password, then choose Create analyst account.'; document.getElementById('loginError').style.display='block'; return; }
+    if (p.length < 8) { document.getElementById('loginError').textContent='Password must be at least 8 characters.'; document.getElementById('loginError').style.display='block'; return; }
+    try {
+      const res = await fetch(API_BASE + '/auth/register', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:u,password:p})});
+      const data = await res.json();
+      document.getElementById('loginError').textContent = data.error || 'Account created. Sign in with your new account.';
+      document.getElementById('loginError').style.display='block';
+      if (res.ok) { document.getElementById('loginError').style.color='var(--teal)'; }
+    } catch(e) { document.getElementById('loginError').textContent='Backend unavailable. Start the SatQuery server first.'; document.getElementById('loginError').style.display='block'; }
   });
 
   document.getElementById('logoutBtn').addEventListener('click', logout);
@@ -989,7 +1195,7 @@
         <div class="activity-dot" style="background:${def.color}"></div>
         <div class="activity-main">
           <div class="activity-title">${a.label} — ${a.n} feature${a.n===1?'':'s'} detected</div>
-          <div class="activity-meta">tile ${a.tile} · avg confidence ${a.conf}%</div>
+          <div class="activity-meta">tile ${a.tile} · avg evidence ${a.conf}/100</div>
         </div>
         <div class="activity-time">${a.time}</div>
       </div>`;
@@ -1026,13 +1232,60 @@
   let currentMode = 'optical';
 
   const CLASSES = {
-    flood:    { label:'Flood extent',      color:'#38BDF8', shape:'polygon' },
-    burn:     { label:'Burn scar / fire',  color:'#F2A93B', shape:'polygon' },
-    deforest: { label:'Deforestation',     color:'#F97066', shape:'polygon' },
-    water:    { label:'Water body',        color:'#2DD4BF', shape:'polygon' },
-    urban:    { label:'Urban / built-up',  color:'#A78BFA', shape:'box' },
-    generic:  { label:'Detected feature',  color:'#94A3B8', shape:'box' }
+    flood:    { label:'Flood extent',                  color:'#38BDF8', shape:'polygon' },
+    burn:     { label:'Burn scar / fire',              color:'#F2A93B', shape:'polygon' },
+    deforest: { label:'Deforestation / canopy loss',   color:'#F97066', shape:'polygon' },
+    wildlife: { label:'Wildlife habitat / disturbance',color:'#EAB308', shape:'polygon' },
+    water:    { label:'Water body',                    color:'#2DD4BF', shape:'polygon' },
+    urban:    { label:'Urban / built-up',              color:'#A78BFA', shape:'box' },
+    generic:  { label:'Detected feature',              color:'#94A3B8', shape:'box' }
   };
+
+  let updateLocationDebounce = null;
+  function updateMapLocationReadout(){
+    if (!map) return;
+    const center = map.getCenter();
+    const lat = center.lat;
+    const lng = center.lng;
+
+    const latStr = `${Math.abs(lat).toFixed(4)}° ${lat >= 0 ? 'N' : 'S'}`;
+    const lngStr = `${Math.abs(lng).toFixed(4)}° ${lng >= 0 ? 'E' : 'W'}`;
+    const coordDisplay = `${latStr}, ${lngStr}`;
+
+    const zone = Math.floor((lng + 180) / 6) + 1;
+    const tileCode = `TILE_S2A_UTM${zone}_${Math.abs(Math.floor(lat * 10))}`;
+    const tileEl = document.getElementById('tileId');
+    if (tileEl) tileEl.textContent = tileCode;
+
+    const sceneEl = document.getElementById('sceneLocation');
+    if (sceneEl) sceneEl.textContent = coordDisplay;
+
+    clearTimeout(updateLocationDebounce);
+    updateLocationDebounce = setTimeout(async () => {
+      try {
+        const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&zoom=10`, {
+          headers: { 'Accept-Language': 'en' }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          const addr = data.address || {};
+          const place = addr.city || addr.town || addr.village || addr.county || addr.state_district || addr.region || addr.suburb || (data.display_name ? data.display_name.split(',')[0] : '');
+          const state = addr.state || addr.province || '';
+          const country = addr.country_code ? addr.country_code.toUpperCase() : '';
+
+          let locName = place;
+          if (state && state !== place) locName += (locName ? ', ' : '') + state;
+          if (country) locName += (locName ? ' · ' : '') + country;
+
+          if (locName && sceneEl) {
+            sceneEl.innerHTML = `${escapeHtml(locName)} <span style="font-size:10.5px;opacity:0.8;font-weight:normal">(${coordDisplay})</span>`;
+          }
+        }
+      } catch (e) {
+        // Fallback remains as lat/lng coordinates if offline
+      }
+    }, 400);
+  }
 
   function ensureMap(){
     if (mapReady) return;
@@ -1043,6 +1296,9 @@
       attribution:'Imagery &copy; Esri — World Imagery'
     }).addTo(map);
     detectionLayer = L.layerGroup().addTo(map);
+
+    map.on('moveend', updateMapLocationReadout);
+    updateMapLocationReadout();
   }
 
   function renderDetections(){
@@ -1050,19 +1306,35 @@
     const thresh = parseInt(document.getElementById('threshold').value,10);
     const visible = currentFeatures.filter(f => f.properties.confidence >= thresh);
 
+    const bounds = [];
     visible.forEach(f=>{
       const clsKey = f.properties.class || 'generic';
       const def = CLASSES[clsKey] || CLASSES['generic'];
       const latlngs = f.geometry.coordinates[0].map(c=>[c[1],c[0]]);
+      latlngs.forEach(ll => bounds.push(ll));
       const isBox = def.shape === 'box';
       const layer = L.polygon(latlngs, {
-        color: def.color, weight: isBox ? 1.6 : 1.4,
-        fillColor: def.color, fillOpacity: isBox ? 0.03 : 0.22,
+        color: def.color, weight: 2.5,
+        fillColor: def.color, fillOpacity: 0.32,
         dashArray: isBox ? '5,4' : null
       });
-      layer.bindPopup(`<div style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;"><b>${f.properties.label || def.label}</b><br/>confidence: ${f.properties.confidence}%<br/>id: ${f.properties.id}</div>`);
+      layer.bindPopup(`<div style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;padding:4px;">
+        <b style="color:${def.color};font-size:12.5px">${f.properties.label || def.label}</b><br/>
+        <span style="display:inline-block;margin-top:4px">evidence score: <b>${f.properties.evidence_score ?? f.properties.confidence}/100</b></span><br/>
+        <span>feature ID: ${f.properties.id}</span><br/>
+        <span style="color:#94a3b8;font-size:10px">${f.properties.coordinate_type==='georeferenced'?'Geo-referenced coordinates':'Viewport screening coordinates'}</span>
+      </div>`);
       layer.addTo(detectionLayer);
     });
+
+    if (bounds.length > 0 && map) {
+      try {
+        const polyBounds = L.latLngBounds(bounds);
+        if (polyBounds.isValid()) {
+          map.fitBounds(polyBounds.pad(0.15), { maxZoom: 15, animate: true });
+        }
+      } catch(e) {}
+    }
 
     updateLegend(visible);
     updateGeoJsonPanel(visible);
@@ -1113,7 +1385,7 @@
   }
 
   const RESPONSES = {
-    flood: (n, mode) => `Detected ${n} flood-affected regions along the river margins${mode==='sar' ? ', using SAR backscatter drop-off as the primary flood signal' : ' by comparing NDWI response across optical bands'}.`,
+    flood: (n, mode) => `Detected ${n} water/inundation candidate regions${mode==='multispectral' ? ' using multispectral NDWI evidence' : ' using optical colour screening'}.`,
     burn: (n, mode) => `Identified ${n} burn scar / active-fire candidates based on thermal contrast and reduced vegetation reflectance.`,
     deforest: (n, mode) => `Flagged ${n} areas of vegetation loss consistent with deforestation, comparing canopy density against the surrounding tree line.`,
     water: (n, mode) => `Segmented ${n} distinct water bodies in the current scene using spectral water indices.`,
@@ -1121,25 +1393,55 @@
     generic: (n, mode) => `Ran a general grounding pass over the scene and surfaced ${n} candidate regions matching the query.`
   };
 
-  function addAiMessage(cls, feats, mode, uploadedFile, modelSource){
+  function addAiMessage(cls, feats, mode, uploadedFile, modelSource, answer, metrics, disclaimer){
+    window.lastAnalysisMetrics=metrics||null; window.lastAnalysisAnswer=answer||'';
+    const ml=document.getElementById('modelLabel'); if(ml) ml.textContent=modelSource||'CV screening';
     clearEmptyHint();
     const n = feats.length;
     const avg = n ? Math.round(feats.reduce((s,f)=>s+f.properties.confidence,0)/n) : 0;
     const div = document.createElement('div');
     div.className = 'msg-ai';
-    const respFn = RESPONSES[cls] || RESPONSES['generic'];
     div.innerHTML = `
       <div class="ai-label">SatQuery AI</div>
-      <div class="ai-text">${respFn(n, mode)}</div>
+      <div class="ai-text">${answer || `I interpreted your request as <b>${cls}</b> and found ${n} candidate region(s).`}</div>
       <div class="ai-stats">
         <span>features</span><b>${n}</b>
-        <span>mean confidence</span><b>${avg}%</b>
+        <span>mean evidence score</span><b>${avg}/100</b>
         <span>band mode</span><b>${mode}</b>
         ${uploadedFile ? `<span>scene file</span><b>${uploadedFile.original_name}</b>` : ''}
-        <span>model</span><b>${modelSource || 'fallback-simulation'}</b>
+        <span>analysis</span><b>${modelSource || 'image-screening'}</b>
       </div>`;
     chatlog.appendChild(div);
     chatlog.scrollTop = chatlog.scrollHeight;
+
+    const card=document.getElementById('analysisCard');
+    if(metrics){
+      card.classList.add('show');
+      card.innerHTML=`<div class="card-title">Scene intelligence</div><div class="analysis-grid">
+        <span>resolution</span><b>${metrics.width||'—'} × ${metrics.height||'—'}</b>
+        <span>water-like pixels</span><b>${metrics.water_like_percent||0}%</b>
+        <span>vegetation-like pixels</span><b>${metrics.vegetation_like_percent||0}%</b>
+        <span>burn-like pixels</span><b>${metrics.burn_like_percent||0}%</b>
+        <span>built-up-like pixels</span><b>${metrics.builtup_like_percent||0}%</b>
+        <span>brightness</span><b>${metrics.brightness_percent||0}%</b>
+      </div>${disclaimer?`<div class="disclaimer">${disclaimer}</div>`:''}`;
+    }
+  }
+
+  // ---- task tabs: keep each capability visually separate ----
+  document.querySelectorAll('.analysis-tab').forEach(tab=>{
+    tab.addEventListener('click',()=>{
+      document.querySelectorAll('.analysis-tab').forEach(t=>{t.classList.remove('active');t.setAttribute('aria-selected','false');});
+      document.querySelectorAll('.console-panel').forEach(p=>p.classList.remove('active'));
+      tab.classList.add('active');
+      tab.setAttribute('aria-selected','true');
+      const panel=document.getElementById(tab.dataset.panel);
+      if(panel){ panel.classList.add('active'); panel.scrollTop=0; }
+    });
+  });
+  function openAnalysisPanel(name){
+    const tab=document.querySelector('.analysis-tab[data-panel="'+name+'"]');
+    if(tab) tab.click();
   }
 
   // ---- processing overlay ----
@@ -1162,10 +1464,11 @@
     tick();
   }
 
-  async function runQuery(text){
+  async function runQuery(text, imageTool=false){
     if (!text || !text.trim()) return;
     ensureMap();
     addUserMessage(text);
+    window.lastQueryText = text;
     document.getElementById('queryinput').value = '';
     const btn = document.querySelector('#queryform button');
     btn.disabled = true;
@@ -1190,12 +1493,29 @@
         });
 
         const data = await res.json();
-        if (res.ok && data.features) {
+        if (!res.ok) throw new Error(data.error || data.details || 'Analysis failed. Please try again.');
+        if (data.features) {
           currentFeatures = data.features;
           document.getElementById('tileId').textContent = data.tile_id || 'T-S2A_2026';
           renderDetections();
           const visible = currentFeatures.filter(f=>f.properties.confidence >= parseInt(document.getElementById('threshold').value,10));
-          addAiMessage(data.query_class || 'generic', visible, currentMode, data.uploaded_file, data.model_source);
+          addAiMessage(data.query_class || 'generic', visible, currentMode, data.uploaded_file, data.model_source, data.answer, data.image_metrics, data.disclaimer);
+          if(imageTool){
+            const panel=document.getElementById('imageResult');
+            panel.classList.add('show');
+            const m=data.image_metrics||{};
+            panel.innerHTML=`<div class="image-result-title">Analysis result</div>
+              <div class="image-result-answer">${data.answer || 'Analysis completed.'}</div>
+              <div class="image-result-grid">
+                <span>Resolution</span><b>${m.width||'—'} × ${m.height||'—'}</b>
+                <span>Water-like</span><b>${m.water_like_percent??'—'}%</b>
+                <span>Vegetation-like</span><b>${m.vegetation_like_percent??'—'}%</b>
+                <span>Built-up-like</span><b>${m.builtup_like_percent??'—'}%</b>
+                <span>Burn-like</span><b>${m.burn_like_percent??'—'}%</b>
+                <span>Candidate regions</span><b>${visible.length}</b>
+              </div>
+              ${data.coordinate_info?.type?`<div class="disclaimer">Coordinate mode: ${data.coordinate_info.type==='georeferenced'?'REAL GEOREFERENCED':'APPROXIMATE VISUALIZATION'}</div>`:''}${data.disclaimer?`<div class="disclaimer">${data.disclaimer}</div>`:''}`;
+          }
           document.getElementById('geojson-drawer').classList.remove('collapsed');
 
           // Refresh database stats & history log
@@ -1204,7 +1524,17 @@
         }
       } catch (err) {
         console.error('Error executing query:', err);
-        showToast('Query error. Please ensure backend server is running.');
+        if (imageTool) {
+          const panel=document.getElementById('imageResult');
+          panel.classList.add('show');
+          panel.innerHTML=`<div class="image-result-title">Analysis failed</div><div class="result-error" style="margin:0">${escapeHtml(err.message || 'Analysis failed.')}<br><br>Check that Python and the analysis packages are installed.</div>`;
+        } else {
+          clearEmptyHint();
+          const div=document.createElement('div'); div.className='msg-ai';
+          div.innerHTML=`<div class="ai-label">SatQuery</div><div class="ai-text">${escapeHtml(err.message || 'Analysis failed. Please try again.')}</div>`;
+          chatlog.appendChild(div); chatlog.scrollTop=chatlog.scrollHeight;
+        }
+        showToast(err.message || 'Analysis failed.');
       } finally {
         btn.disabled = false;
       }
@@ -1215,6 +1545,228 @@
     e.preventDefault();
     runQuery(document.getElementById('queryinput').value);
   });
+
+  // Intelligence toolkit: all tools route through the same natural-language engine.
+  document.querySelectorAll('[data-tool-query]').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      const isImageTool = !!btn.closest('#image-panel');
+      if(!isImageTool) openAnalysisPanel('ask-panel');
+      document.getElementById('queryinput').value=btn.dataset.toolQuery;
+      runQuery(btn.dataset.toolQuery, isImageTool);
+    });
+  });
+
+  let selectedTimelineFiles = [];
+
+  function renderTimelineFileList() {
+    const container = document.getElementById('timelineSceneList');
+    const label = document.getElementById('timelineName');
+    if (!container) return;
+
+    if (selectedTimelineFiles.length === 0) {
+      label.textContent = 'Click to browse or add images';
+      container.innerHTML = '';
+      return;
+    }
+
+    label.textContent = `${selectedTimelineFiles.length} scene(s) selected (click Analyse below)`;
+    container.innerHTML = selectedTimelineFiles.map((file, idx) => `
+      <div style="display:flex;align-items:center;justify-content:space-between;background:var(--panel);border:1px solid var(--border);border-radius:6px;padding:6px 10px;font-size:11px;">
+        <div style="display:flex;align-items:center;gap:8px;min-width:0;">
+          <span style="font-family:var(--font-mono);color:var(--teal);font-weight:600;">#0${idx+1}</span>
+          <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text);">${escapeHtml(file.name)}</span>
+          <span style="font-family:var(--font-mono);color:var(--text-faint);font-size:10px;">(${Math.ceil(file.size/1024)} KB)</span>
+        </div>
+        <button type="button" data-remove-timeline="${idx}" style="background:none;border:none;color:var(--coral);cursor:pointer;font-size:12px;padding:2px 4px;" title="Remove scene">✕</button>
+      </div>
+    `).join('');
+
+    container.querySelectorAll('[data-remove-timeline]').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const removeIdx = parseInt(btn.dataset.removeTimeline, 10);
+        selectedTimelineFiles.splice(removeIdx, 1);
+        renderTimelineFileList();
+      });
+    });
+  }
+
+  const timelineFilesInput = document.getElementById('timelineFiles');
+  timelineFilesInput.addEventListener('change', function() {
+    if (this.files && this.files.length > 0) {
+      Array.from(this.files).forEach(f => {
+        if (!selectedTimelineFiles.some(existing => existing.name === f.name && existing.size === f.size)) {
+          selectedTimelineFiles.push(f);
+        }
+      });
+      renderTimelineFileList();
+      this.value = '';
+    }
+  });
+
+  document.getElementById('timelineBtn').addEventListener('click', async () => {
+    if (selectedTimelineFiles.length < 1) {
+      showToast('Select at least one satellite scene.');
+      return;
+    }
+    const btn = document.getElementById('timelineBtn');
+    btn.disabled = true;
+    btn.textContent = 'Analysing timeline…';
+
+    try {
+      const body = new FormData();
+      selectedTimelineFiles.forEach(f => body.append('scenes', f));
+      body.append('sensitivity', document.getElementById('threshold').value);
+
+      const res = await fetch(API_BASE + '/intelligence/timeline', {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + session.token },
+        body
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || data.details || 'Timeline analysis failed');
+
+      window.lastTimeline = data;
+      const r = document.getElementById('timelineResult');
+      r.classList.add('show');
+
+      let html = '<div style="font-weight:800;color:var(--teal);margin-bottom:7px">Temporal intelligence result</div>';
+      html += '<div style="font-size:12px;color:var(--text);margin-bottom:10px">' + data.images.length + ' scene(s) · <b>' + escapeHtml(data.trend) + '</b></div>';
+
+      if (data.changes && data.changes.length > 0) {
+        data.changes.forEach(c => {
+          html += '<div class="timeline-change"><div><b>' + escapeHtml(c.from) + '</b> → <b>' + escapeHtml(c.to) + '</b></div>';
+          html += '<div class="timeline-main-stat">' + c.change_percent + '% changed area · ' + c.regions + ' detected region(s)</div>';
+          (c.semantic_changes || []).forEach(d => {
+            html += '<div class="timeline-semantic"><span>' + escapeHtml(d.metric) + '</span><b>' + d.before + '% → ' + d.after + '%</b><em>' + ((d.delta > 0) ? '+' : '') + d.delta + ' pp · ' + escapeHtml(d.direction) + '</em></div>';
+          });
+          if (c.change_preview) html += '<img class="image-expandable timeline-preview" src="' + c.change_preview + '" alt="Timeline change map ' + escapeHtml(c.from) + ' to ' + escapeHtml(c.to) + '">';
+          html += '</div>';
+        });
+      } else if (data.images && data.images.length === 1) {
+        const imgInfo = data.images[0];
+        const m = imgInfo.metrics || {};
+        html += '<div class="timeline-change"><div><b>Single Scene Baseline: ' + escapeHtml(imgInfo.name) + '</b></div>';
+        html += '<div class="timeline-main-stat">Quality score: <b>' + (imgInfo.quality?.score || 90) + '/100</b> (' + (imgInfo.quality?.input_type || 'optical') + ')</div>';
+        html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;font-size:10.5px;color:var(--text-faint);margin-top:6px;">' +
+          '<span>Vegetation: <b>' + (m.vegetation_like_percent || 0) + '%</b></span>' +
+          '<span>Water: <b>' + (m.water_like_percent || 0) + '%</b></span>' +
+          '<span>Built-up: <b>' + (m.builtup_like_percent || 0) + '%</b></span>' +
+          '<span>Brightness: <b>' + (m.brightness_percent || 0) + '%</b></span></div>' +
+          '<div style="margin-top:8px;font-size:10.5px;color:var(--teal);">💡 Tip: Add another scene above to calculate multi-date change trends.</div></div>';
+      }
+
+      r.innerHTML = html;
+      showToast('Timeline analysis completed!');
+    } catch (e) {
+      console.error(e);
+      showToast(e.message || 'Timeline analysis failed');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Analyse timeline';
+    }
+  });
+
+  document.getElementById('reportBtn').addEventListener('click', async ()=>{
+    openAnalysisPanel('reports-panel');
+    const result=document.getElementById('toolResult');
+    result.classList.add('show'); result.innerHTML='<b>Generating professional report…</b><div style="margin-top:6px;color:var(--text-faint)">Compiling scene metrics, change evidence and timeline findings.</div>';
+    try{
+      const analysis={query:window.lastQueryText || 'Scene intelligence', image_metrics:window.lastAnalysisMetrics||null, feature_count:currentFeatures.length, answer:window.lastAnalysisAnswer||'', model_source:document.getElementById('modelLabel')?.textContent||'CV screening'};
+      const res=await fetch(API_BASE+'/intelligence/report',{
+        method:'POST',
+        headers:{'Content-Type':'application/json','Authorization':'Bearer '+session.token},
+        body:JSON.stringify({query:analysis.query,analysis,comparison:window.lastComparison||null,timeline:window.lastTimeline||null})
+      });
+      const data=await res.json(); if(!res.ok) throw new Error(data.error||'Report failed');
+      result.innerHTML='<div style="font-weight:800;color:var(--teal);margin-bottom:8px">Professional intelligence report ready</div><pre class="professional-report">'+escapeHtml(data.report)+'</pre><button class="report-btn" id="downloadReport">Download report (.txt)</button>';
+      document.getElementById('downloadReport').onclick=()=>{
+        const blob=new Blob([data.report],{type:'text/plain;charset=utf-8'});const a=document.createElement('a');
+        a.href=URL.createObjectURL(blob);a.download='SatQuery_Intelligence_Report.txt';a.click();
+      };
+    }catch(e){result.innerHTML='<div class="result-error" style="margin:0">'+escapeHtml(e.message)+'</div>';}
+  });
+  function escapeHtml(v){return String(v).replace(/[&<>\"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;'}[c]));}
+
+  const beforeFileInput = document.getElementById('beforeFile');
+  const afterFileInput = document.getElementById('afterFile');
+  const beforeName = document.getElementById('beforeName');
+  const afterName = document.getElementById('afterName');
+  const compareBtn = document.getElementById('compareBtn');
+
+  beforeFileInput.addEventListener('change', function(){ beforeName.textContent = this.files[0]?.name || 'Choose scene'; });
+  afterFileInput.addEventListener('change', function(){ afterName.textContent = this.files[0]?.name || 'Choose scene'; });
+
+  compareBtn.addEventListener('click', async function(){
+    const before = beforeFileInput.files[0];
+    const after = afterFileInput.files[0];
+    if (!before || !after) { showToast('Select both Before and After images.'); return; }
+    compareBtn.disabled = true;
+    compareBtn.textContent = 'Comparing…';
+    try {
+      const body = new FormData();
+      body.append('before', before);
+      body.append('after', after);
+      body.append('sensitivity', document.getElementById('threshold').value);
+      const res = await fetch(API_BASE + '/compare', { method:'POST', headers:{'Authorization':'Bearer ' + session.token}, body });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Comparison failed');
+
+      let result = document.getElementById('compareResult');
+      if (!result) {
+        result = document.createElement('div');
+        result.id = 'compareResult';
+        result.className = 'compare-result';
+        document.getElementById('compare-panel').appendChild(result);
+      }
+      result.classList.add('show');
+      window.lastComparison = data;
+      const spectral = data.method && data.method.includes('multispectral');
+      const evidenceRows = spectral && data.deltas ? `
+        <div class="semantic-change-card">
+          <div class="semantic-change-title">Spectral evidence</div>
+          <div class="semantic-row"><span>NDVI</span><b>${data.before.ndvi_mean} → ${data.after.ndvi_mean}</b><em>${data.deltas.ndvi > 0 ? '+' : ''}${data.deltas.ndvi}</em></div>
+          <div class="semantic-row"><span>NDWI</span><b>${data.before.ndwi_mean} → ${data.after.ndwi_mean}</b><em>${data.deltas.ndwi > 0 ? '+' : ''}${data.deltas.ndwi}</em></div>
+          <div class="semantic-row"><span>NBR</span><b>${data.before.nbr_mean} → ${data.after.nbr_mean}</b><em>${data.deltas.nbr > 0 ? '+' : ''}${data.deltas.nbr}</em></div>
+          <div class="semantic-row"><span>Flood signal</span><b>${data.flood_signal_percent}%</b><em>NDWI increase</em></div>
+          <div class="semantic-row"><span>Vegetation loss</span><b>${data.vegetation_loss_percent}%</b><em>NDVI decrease</em></div>
+        </div>` : (data.semantic_changes && data.semantic_changes.deltas ? `
+        <div class="semantic-change-card"><div class="semantic-change-title">Textual change evidence</div>
+          ${data.semantic_changes.deltas.map(d=>`<div class="semantic-row"><span>${escapeHtml(d.metric)}</span><b>${d.before}% → ${d.after}%</b><em class="${d.direction}">${d.delta>0?'+':''}${d.delta} pp · ${escapeHtml(d.direction)}</em></div>`).join('')}
+        </div>` : '');
+      result.innerHTML = `
+        <div class="compare-title">Before → After intelligence</div>
+        <div class="compare-stats">
+          <span>changed area</span><b>${data.change_percent}%</b>
+          <span>regions</span><b>${data.regions || 0}</b>
+          <span>method</span><b>${spectral ? '6-band NDVI / NDWI / NBR' : 'normalized RGB difference'}</b>
+          <span>coordinate mode</span><b>${data.coordinate_type === 'georeferenced' ? 'REAL GEOREFERENCED' : 'IMAGE-SPACE'}</b>
+        </div>
+        ${data.before_preview && data.after_preview ? `<div class="compare-files"><img class="image-expandable" src="${data.before_preview}" alt="Before scene" title="Before" /><img class="image-expandable" src="${data.after_preview}" alt="After scene" title="After" /></div>` : ''}
+        <img class="image-expandable" src="${data.change_preview || ''}" alt="Detected changes highlighted on after image" title="Click to view full screen" />
+        ${evidenceRows}
+        <div class="semantic-change-card"><div class="semantic-change-title">Why this result?</div>
+          <div class="semantic-row"><span>Interpretation</span><b>${data.flood_signal_percent > 0 ? 'new inundation signal' : data.vegetation_loss_percent > 0 ? 'vegetation-loss signal' : 'multi-index change'}</b><em>temporal spectral evidence</em></div>
+          <div class="semantic-row"><span>Registration</span><b>${data.co_registration?.performed ? 'automatic grid alignment' : 'input grids already aligned'}</b><em>${escapeHtml(data.crs || 'georeferenced')}</em></div>
+          <div class="semantic-row"><span>Dates</span><b>${escapeHtml(data.before?.acquisition_date || 'unknown')} → ${escapeHtml(data.after?.acquisition_date || 'unknown')}</b><em>source metadata</em></div>
+        </div>
+        ${data.evidence ? `<div class="disclaimer">${data.evidence.map(escapeHtml).join(' · ')}</div>` : ''}`;
+      clearEmptyHint();
+      const msg = document.createElement('div');
+      msg.className = 'msg-ai';
+      msg.innerHTML = `<div class="ai-label">SatQuery Change Detection</div><div class="ai-text">Compared <b>${before.name}</b> against <b>${after.name}</b> and found <b>${data.change_percent}%</b> changed area across <b>${data.regions}</b> regions.</div>`;
+      chatlog.appendChild(msg);
+      chatlog.scrollTop = chatlog.scrollHeight;
+    } catch(err) {
+      console.error(err);
+      showToast(err.message || 'Comparison failed.');
+    } finally {
+      compareBtn.disabled = false;
+      compareBtn.textContent = 'Compare scenes';
+    }
+  });
+
   const sceneFileInput = document.getElementById('sceneFile');
   const filePreview = document.getElementById('filePreview');
   const fileThumbnail = document.getElementById('fileThumbnail');
@@ -1231,7 +1783,31 @@
       fileThumbnail.removeAttribute('src');
       fileThumbnail.style.display = 'none';
     }
+    // Uploading a scene immediately produces a real result; no extra hidden step.
+    if (file.type.startsWith('image/')) {
+      openAnalysisPanel('image-panel');
+      setTimeout(()=>runQuery('Give me a complete scene summary', true), 60);
+    } else {
+      showToast('GeoTIFF selected. Use Ask AI after upload for raster-aware processing.');
+    }
   });
+  // Full-screen image viewer for uploaded and generated previews.
+  const imageViewer=document.getElementById('imageViewer');
+  const imageViewerImg=document.getElementById('imageViewerImg');
+  const imageViewerCaption=document.getElementById('imageViewerCaption');
+  function openImageViewer(src,caption='Satellite image'){
+    if(!src) return; imageViewerImg.src=src; imageViewerCaption.textContent=caption; imageViewer.classList.add('show'); imageViewer.setAttribute('aria-hidden','false');
+  }
+  function closeImageViewer(){ imageViewer.classList.remove('show'); imageViewer.setAttribute('aria-hidden','true'); imageViewerImg.removeAttribute('src'); }
+  document.getElementById('imageViewerClose').addEventListener('click',closeImageViewer);
+  imageViewer.addEventListener('click',e=>{ if(e.target===imageViewer) closeImageViewer(); });
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeImageViewer(); });
+  document.getElementById('fileThumbnail').addEventListener('click',()=>openImageViewer(document.getElementById('fileThumbnail').src,document.getElementById('fileName').textContent||'Uploaded satellite image'));
+  document.addEventListener('click',e=>{
+    const img=e.target.closest('.image-expandable');
+    if(img) openImageViewer(img.currentSrc||img.src,img.alt||'Satellite analysis result');
+  });
+
   document.getElementById('removeFile').addEventListener('click', function(){
     sceneFileInput.value = '';
     filePreview.classList.remove('show');
@@ -1247,9 +1823,9 @@
   });
 
   const modeNotes = {
-    optical: 'Optical (Sentinel-2 RGB) — true-colour visual bands.',
-    multispectral: 'Multispectral — false-colour composite emphasising NIR / vegetation & moisture bands.',
-    sar: 'SAR (radar) — simulated backscatter visualisation, cloud- and light-independent.'
+    optical: 'Optical RGB — fast visual screening for JPG/PNG scenes.',
+    multispectral: 'Multispectral — real six-band HLS-style GeoTIFF analysis with NDVI / NDWI / NBR.',
+    sar: 'SAR (Sentinel-1) — Synthetic Aperture Radar backscatter & polarimetric intensity analysis.'
   };
   document.getElementById('modeToggle').addEventListener('click', function(e){
     const btn = e.target.closest('.mode-btn');
@@ -1261,9 +1837,81 @@
     document.getElementById('bandNote').textContent = modeNotes[currentMode];
   });
 
+  const drawerEl = document.getElementById('geojson-drawer');
+  const resizerEl = document.getElementById('drawerResizer');
+  let isDraggingDrawer = false;
+  let startY = 0;
+  let startHeight = 0;
+
+  if (resizerEl) {
+    resizerEl.addEventListener('mousedown', function(e) {
+      isDraggingDrawer = true;
+      startY = e.clientY;
+      startHeight = drawerEl.offsetHeight;
+      drawerEl.classList.remove('collapsed');
+      drawerEl.classList.remove('expanded');
+      resizerEl.classList.add('dragging');
+      document.body.style.cursor = 'ns-resize';
+      document.body.style.userSelect = 'none';
+    });
+
+    document.addEventListener('mousemove', function(e) {
+      if (!isDraggingDrawer) return;
+      const dy = startY - e.clientY;
+      let newH = startHeight + dy;
+      const maxH = window.innerHeight * 0.85;
+      const minH = 38;
+      newH = Math.max(minH, Math.min(maxH, newH));
+      drawerEl.style.height = newH + 'px';
+    });
+
+    document.addEventListener('mouseup', function() {
+      if (isDraggingDrawer) {
+        isDraggingDrawer = false;
+        resizerEl.classList.remove('dragging');
+        document.body.style.cursor = '';
+        document.body.style.userSelect = '';
+      }
+    });
+  }
+
+  const expandBtn = document.getElementById('expandDrawerBtn');
+  if (expandBtn) {
+    expandBtn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      if (drawerEl.classList.contains('expanded')) {
+        drawerEl.classList.remove('expanded');
+        drawerEl.style.height = '240px';
+        expandBtn.textContent = '⤢ Expand';
+      } else {
+        drawerEl.classList.remove('collapsed');
+        drawerEl.classList.add('expanded');
+        expandBtn.textContent = '⤤ Shrink';
+      }
+    });
+  }
+
+  const wrapBtn = document.getElementById('toggleWrapBtn');
+  const outputPre = document.getElementById('geojson-output');
+  if (wrapBtn && outputPre) {
+    wrapBtn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      if (outputPre.style.whiteSpace === 'pre-wrap') {
+        outputPre.style.whiteSpace = 'pre';
+        wrapBtn.textContent = 'Wrap';
+      } else {
+        outputPre.style.whiteSpace = 'pre-wrap';
+        wrapBtn.textContent = 'Unwrap';
+      }
+    });
+  }
+
   document.getElementById('drawerHead').addEventListener('click', function(e){
-    if (e.target.closest('.drawer-actions')) return;
-    document.getElementById('geojson-drawer').classList.toggle('collapsed');
+    if (e.target.closest('.drawer-actions') || e.target.closest('.drawer-resizer')) return;
+    drawerEl.classList.toggle('collapsed');
+    if (!drawerEl.classList.contains('collapsed') && drawerEl.offsetHeight <= 40) {
+      drawerEl.style.height = '240px';
+    }
   });
 
   document.getElementById('copyBtn').addEventListener('click', function(e){
@@ -1298,15 +1946,28 @@
     downloadFile('satquery_output.json', 'application/json');
   });
 
+  document.getElementById('downloadGeoBtn').insertAdjacentHTML('afterend', '<button id="downloadCsvBtn" type="button">Download .csv</button>');
+  document.getElementById('downloadCsvBtn').addEventListener('click', function(e){
+    e.stopPropagation();
+    if(!currentFeatures.length){ showToast('Run a query first'); return; }
+    const rows=[['id','class','label','evidence_score','longitude','latitude','coordinate_type']];
+    currentFeatures.forEach(f=>{ const p=f.properties||{}, c=f.geometry?.coordinates?.[0]?.[0]||[null,null]; rows.push([p.id,p.class,p.label,p.evidence_score ?? p.confidence,c[0],c[1],p.coordinate_type||'approximate_visualization']); });
+    const csv=rows.map(r=>r.map(v=>'"'+String(v??'').replaceAll('"','""')+'"').join(',')).join('\n');
+    const blob=new Blob([csv],{type:'text/csv'}), url=URL.createObjectURL(blob), a=document.createElement('a');
+    a.href=url;a.download='satquery_detections.csv';document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url);
+    showToast('Downloaded satquery_detections.csv'); logExportBackend('CSV',currentFeatures.length);
+  });
+
+
   // =========================================================
   // FAQ
   // =========================================================
   const FAQS = [
-    { q:'What imagery does SatQuery AI work with?', a:'It is designed to handle optical (RGB), multispectral (NIR / SWIR bands), and SAR radar imagery from sources like Sentinel-2, Landsat, and ISRO Bhuvan, so you are not limited to plain visual-band photos.' },
-    { q:'How accurate are the detections?', a:'Every detection carries a confidence score, and you can raise the minimum confidence threshold in the console to filter out uncertain results.' },
+    { q:'What imagery does SatQuery AI work with?', a:'The current production path supports RGB JPG/PNG screening and six-band HLS-style GeoTIFF analysis (Blue, Green, Red, Narrow NIR, SWIR 1, SWIR 2). SAR is intentionally not claimed as an implemented capability.' },
+    { q:'What does the evidence score mean?', a:'The evidence score (0–100) summarizes measurable signal strength and region consistency. It is not model accuracy, probability, precision, recall, or a validated confidence interval.' },
     { q:'What formats can I export?', a:'Results are generated as a standard GeoJSON FeatureCollection, downloadable as .geojson or .json, and structured so it can be dropped straight into QGIS or ArcGIS.' },
     { q:'Do I need GIS experience to use this?', a:'No — the whole point is replacing manual GIS workflows with plain-language questions. If you can describe what you are looking for, the console will locate it on the map.' },
-    { q:'Why does SAR mode matter for disaster response?', a:'Radar can see through cloud cover and works day or night, which makes it especially useful for flood mapping during storms when optical imagery is obscured.' },
+    { q:'Does SatQuery support SAR?', a:'Yes — SAR (Sentinel-1) mode enables radar backscatter intensity analysis, detecting specular reflection (water/floods) and high double-bounce scattering (urban structures/infrastructure) regardless of cloud cover.' },
     { q:'How does the SQLite Database backend store records?', a:'Every query, feature detection coordinate, and user export is logged in SQLite tables (`queries`, `detections`, `activity_logs`), enabling persistence across sessions and reloads.' }
   ];
 

@@ -1,0 +1,14 @@
+node_modules/
+__pycache__/
+*.py[cod]
+.env
+*.db
+*.sqlite
+*.sqlite3
+checkpoints/
+*.pth
+*.onnx
+.vscode/
+.DS_Store
+Thumbs.db
+*.log

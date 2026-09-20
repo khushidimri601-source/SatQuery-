@@ -1,8 +1,8 @@
 """
-SatQuery AI — Satellite Vision-Language Model Fine-Tuning PyTorch Script
+SatQuery AI — Experimental VLM Training Prototype
 -------------------------------------------------------------------------
-This module implements fine-tuning for Earth Observation (EO) Vision-Language
-Grounded Object Detection models.
+This module is an experimental training prototype for Earth Observation (EO)
+vision-language spatial grounding. It is NOT a production fine-tuning pipeline.
 
 It accepts remote sensing imagery tiles paired with natural language prompt queries
 and trains a spatial bounding predictor.
@@ -121,7 +121,7 @@ class SpatialGroundingLoss(nn.Module):
 # ----------------------------------------------------
 def train_satquery_vlm(args):
     print("==========================================================")
-    print("🛰️ Starting SatQuery AI Model Fine-Tuning Pipeline")
+    print("🛰️ Starting SatQuery AI Experimental VLM Training Prototype")
     print(f"📁 Dataset JSON: {args.data_json}")
     print(f"⚙️ Epochs: {args.epochs} | Batch Size: {args.batch_size} | LR: {args.lr}")
     print("==========================================================")
@@ -184,7 +184,7 @@ def train_satquery_vlm(args):
     print("\n✅ Training completed successfully!")
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="SatQuery VLM Fine-Tuning Script")
+    parser = argparse.ArgumentParser(description="SatQuery Experimental VLM Training Prototype")
     parser.add_argument("--data_json", type=str, default="./data/satquery_train.json")
     parser.add_argument("--image_dir", type=str, default="./data/tiles")
     parser.add_argument("--epochs", type=int, default=5)

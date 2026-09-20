@@ -1,0 +1,5 @@
+# Core image + geospatial analysis
+Pillow>=10.0.0
+numpy>=1.24.0
+scipy>=1.10.0
+rasterio>=1.3.9

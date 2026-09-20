@@ -1,66 +1,44 @@
-# SatQuery AI — Satellite AI Model Selection & Fine-Tuning Guide
+# SatQuery model roadmap
 
-This document provides a technical roadmap for selecting, fine-tuning, and deploying Deep Learning Vision-Language Models (VLMs) and Object Detectors for Earth Observation (EO) and geospatial satellite analysis.
+## Current production prototype
+SatQuery currently has three honest analysis layers:
 
----
+1. **RGB screening** for JPG/PNG using deterministic image signals.
+2. **Multispectral evidence** for six-band HLS-style GeoTIFFs using NDVI, NDWI and NBR.
+3. **Optional Prithvi-EO-2.0 backbone inference** for compatible six-band GeoTIFFs through TerraTorch.
 
-## 1. AI Model Selection Architecture Matrix
+The Prithvi backbone is a foundation encoder. It does **not** magically turn into a flood/deforestation detector. A task-specific downstream checkpoint is required for validated semantic segmentation/classification.
 
-Depending on your target geospatial application, select the optimal architecture below:
+## Recommended downstream tasks
 
-| Application Goal | Model Architecture | Core Strengths | Target Benchmarks / Datasets |
-| :--- | :--- | :--- | :--- |
-| **Vision-Language Query & Grounding** | **GeoChat / LLaVA-Geo** | Multi-modal VLM pre-trained on high-res satellite imagery. Accepts natural language queries and outputs bounding polygons. | **RSVQA-HR**, **GeoGrounded**, **SkyScript** |
-| **Foundation Segmentation** | **SAM-Geo (Segment Anything for Geospatial)** | Zero-shot / few-shot geospatial feature extraction (floods, water, forests, urban structures, agricultural fields). | **SpaceNet 1-7**, **Inria Aerial Footprint** |
-| **Fast Object Detection** | **YOLOv8-OBB / YOLOv11-OBB** | Oriented Bounding Box detection for arbitrary-rotated satellite targets (ships, planes, solar farms, vehicles). | **DOTA v2.0**, **NWPU VISC-10** |
-| **Multispectral / SAR Encoder** | **Prithvi-EO / RemoteCLIP** | Vision Transformer foundation backbones by NASA/IBM for multi-band Sentinel-2 & SAR imagery. | **Sentinel-2 L2A**, **Landsat 8/9** |
+| Task | Recommended path | Output |
+|---|---|---|
+| Flood mapping | Prithvi + a flood segmentation checkpoint | Pixel-level flood mask |
+| Vegetation/crop monitoring | Prithvi + crop/land-cover checkpoint | Crop/land-cover map |
+| Burn scars | Prithvi + HLS burn-scar checkpoint | Burn-scar mask |
+| Change detection | Co-registered multispectral indices + optional learned model | Change mask + evidence |
+| Natural-language grounding | Separate EO VLM such as GeoChat-style research model | Query-to-region explanation |
 
----
+NASA's Prithvi-EO-2.0 repository provides TerraTorch configurations for flood detection, burn scars and multi-temporal crop classification. SatQuery should use those as the starting point for future task-specific checkpoints rather than claiming the base backbone itself performs those tasks.
 
-## 2. Dataset Preparation & Preprocessing
+## Experimental VLM training script
+`train_satquery_vlm.py` is retained only as an **Experimental VLM Training Prototype**. It is not the production inference path and must not be described as a trained SatQuery foundation model.
 
-### A. Vision-Language Dataset Format (`satquery_vlm_dataset.json`)
-```json
-[
-  {
-    "id": "sample_001",
-    "image_path": "tiles/sentinel2_assam_01.tif",
-    "query": "Find all flooded regions in this scene",
-    "target_class": "flood",
-    "bboxes": [
-      [94.175, 26.955, 94.185, 26.965]
-    ],
-    "ground_truth_geojson": {
-      "type": "Polygon",
-      "coordinates": [[[94.175, 26.955], [94.185, 26.955], [94.185, 26.965], [94.175, 26.965], [94.175, 26.955]]]
-    }
-  }
-]
-```
+## Evaluation plan before claiming accuracy
+For any task-specific model:
 
-### B. Standard Satellite Datasets to Download
-1. **RSVQA (Remote Sensing Visual Question Answering)**: 21,000+ low & high resolution images with question-answer-bounding box triplets.
-2. **SpaceNet Building & Road Extraction**: Multi-city Sentinel-2 and DigitalGlobe high-resolution GeoTIFFs.
-3. **DOTA v2.0**: 11,268 satellite scenes with 1.7 million oriented bounding box instances.
+- keep a held-out geographic test set;
+- report IoU/F1/precision/recall, not a generic “AI accuracy”;
+- test across seasons, cloud conditions and locations;
+- compare against a simple baseline;
+- document class definitions and no-data/cloud handling.
 
----
+## Data contract
+Prithvi-EO-2.0 expects HLS-style six-band inputs in this order:
+`BLUE, GREEN, RED, NIR_NARROW, SWIR_1, SWIR_2`.
+For temporal/location-aware variants, preserve acquisition date and scene geolocation metadata.
 
-## 3. Training & Fine-Tuning Execution
-
-Run the custom PyTorch fine-tuning script provided in `train_satquery_vlm.py`:
-
-```bash
-python train_satquery_vlm.py \
-  --data_json ./data/satquery_train.json \
-  --image_dir ./data/satellite_tiles \
-  --epochs 15 \
-  --batch_size 8 \
-  --lr 1e-4 \
-  --output_dir ./checkpoints/satquery_vlm_v1
-```
-
----
-
-## 4. Deploying Checkpoints to the Backend
-
-Once training completes, place the saved PyTorch model (`satquery_vlm_best.pth` or ONNX export) into the backend directory. `ai_model_bridge.py` can load `torch.jit` or `onnxruntime` models for live inference.
+## Official references
+- NASA/IMPACT Prithvi-EO-2.0: https://github.com/NASA-IMPACT/Prithvi-EO-2.0
+- Prithvi-EO-2.0 models: https://huggingface.co/ibm-nasa-geospatial/Prithvi-EO-2.0-300M
+- TerraTorch documentation: https://torchgeo.org/terratorch/1.2.10/guide/quick_start/
